@@ -57,7 +57,7 @@ jobs:
 
           echo "Texte à lire : $SUMMARY"
 
-          VOICE_ID="AZnzlk1XvdvUeBnXmlld"  # Chloé, francophone
+          VOICE_ID="ErXwobaYiN019PkySvjV"  # Chloé, francophone
 
           curl -X POST https://api.elevenlabs.io/v1/text-to-speech/$VOICE_ID \
             -H "xi-api-key: $ELEVENLABS_API_KEY" \
