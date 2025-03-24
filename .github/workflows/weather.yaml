@@ -1,34 +1,20 @@
-name: Talk Weather
+- name: Get weather data and generate response
+  id: ask_gemini
+  run: |
+    TEMP=$(curl -s https://wttr.in/Paris)
+    PROMPT="Résume la météo à Paris à partir de la réponse suivante : $TEMP"
 
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
-  schedule:
-    - cron: "*/2 * * * *"  # Każde 2 minuty
+    RESPONSE=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${{ secrets.GEMINI_API }}" \
+      -H 'Content-Type: application/json' \
+      -X POST \
+      -d "$(jq -n --arg text "$PROMPT" '{contents: [{parts: [{text: $text}]}]}')"
+    )
 
-jobs:
-  ask-weather:
-    runs-on: ubuntu-latest
+    echo "RAW RESPONSE:"
+    echo "$RESPONSE"
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    # Wyciągnięcie tekstu odpowiedzi z JSON
+    TEXT=$(echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text')
 
-      - name: Afficher l’heure d’exécution
-        run: date
-
-      - name: Get weather data
-        id: get_weather
-        run: |
-          TEMP=$(curl -s https://wttr.in/Paris)
-          curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${{ secrets.GEMINI_API }}" \
-          -H 'Content-Type: application/json' \
-          -X POST \
-          -d '{
-          "contents": [{
-          "parts":[{"text": "Jaki dzis dzien?"}]
-          }]
-          }')
-          echo "$text"
+    echo "Réponse générée par Gemini :"
+    echo "$TEXT"
