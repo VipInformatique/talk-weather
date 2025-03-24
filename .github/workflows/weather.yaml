@@ -26,28 +26,25 @@ jobs:
         env:
           GEMINI_API: ${{ secrets.GEMINI_API }}
         run: |
-          # Pobierz pogodę (uproszczona wersja dla czytelności)
           TEMP=$(curl -s https://wttr.in/Paris?format=3)
-          echo "Pobrana pogoda: $TEMP"
-
-          # Przygotuj prompt
           PROMPT="Résume la météo à Paris à partir de la réponse suivante : $TEMP"
 
-          # Stwórz JSON payload
           PAYLOAD=$(jq -n --arg text "$PROMPT" '{
             contents: [{
               parts: [{ text: $text }]
             }]
           }')
 
-          # Wyślij zapytanie do Gemini
           RESPONSE=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$GEMINI_API" \
             -H "Content-Type: application/json" \
             -X POST \
             -d "$PAYLOAD")
 
-          # Zapisz całą odpowiedź do pliku
-          echo "$RESPONSE" > TEXT.txt
-          
-          echo "Zawartość TEXT.txt:"
-          cat TEXT.txt
+          # Wyciągamy tylko czystą odpowiedź tekstową
+          SUMMARY=$(echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text')
+
+          echo "Odpowiedź Gemini:"
+          echo "$SUMMARY"
+
+          # Zapisujemy do pliku tekstowego
+          echo "$SUMMARY" > TEXT.txt
