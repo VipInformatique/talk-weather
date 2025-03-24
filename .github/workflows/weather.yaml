@@ -26,7 +26,7 @@ jobs:
       - name: Préparer le texte
         run: |
           TEMP=$(cat temp.txt | grep -o "+[0-9]\+" | sed 's/+//')
-          TEXT="Maintenant à Paris, il fait ${TEMP} degrés Celsius."
+          TEXT="Maintenant à Paris, il fait ${TEMP} degrés. Bonne journée !"
           echo "$TEXT"
           echo "TEXT=$TEXT" >> $GITHUB_ENV
 
