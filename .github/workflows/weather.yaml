@@ -25,13 +25,13 @@ jobs:
           TEMP=$(curl -s https://wttr.in/Paris)
           prompt="Resume la meteo a Paris a partir de la reponse suivante : $TEMP"
 
-          RESPONSE=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${{ GEMINI_API}}" \
+          RESPONSE=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${{ secrets.GEMINI_API }}" \
           -H 'Content-Type: application/json' \
           -X POST \
           -d '{
           "contents": [{
             "parts":[{"text": "$prompt"}]
             }]
-          }'
+          }')
 
-          echo "$REPONSE"
+          echo $REPONSE
