@@ -24,7 +24,7 @@ jobs:
         run: |
           TEMP=$(curl -s https://wttr.in/Paris)
           echo "Température brute:"
-          cat temp.txt
+          echo "$TEMP"
 
 
         
