@@ -22,22 +22,16 @@ jobs:
 
       - name: Get temperature only
         run: |
-          TEMP=curl -s "https://wttr.in/Paris?format=%t&m"
+          curl -s "https://wttr.in/Paris?format=%t&m" > temp.txt
           echo "Température brute:"
           cat temp.txt
 
-
-        
-        
-          curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${{ secrets.GEMINI_API }}" \
--H 'Content-Type: application/json' \
--X POST \
--d '{
-  "contents": [{
-    "parts":[{"text": Quel temps fait-il à Paris en ce moment ?"$TEMP"}]
-    }]
-   }'
-
+      - name: Préparer le texte
+        run: |
+          TEMP=$(cat temp.txt | grep -o "+[0-9]\+" | sed 's/+//')
+          TEXT="Maintenant à Paris, il fait ${TEMP}degrés. Bonne journée !"
+          echo "$TEXT"
+          echo "TEXT=$TEXT" >> $GITHUB_ENV
 
       - name: Convertir en parole avec ElevenLabs
         env:
