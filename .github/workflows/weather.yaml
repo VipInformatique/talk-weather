@@ -38,4 +38,30 @@ jobs:
           SUMMARY=$(echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text')
           echo "$SUMMARY"
 
-          echo "$SUMMARY" > TEXT.txt
+      - name: Convertir en parole avec ElevenLabs
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          TEXT: ${{ env.SUMMARY }}
+        run: |
+          echo "Texte à lire : $SUMMARY"
+
+          # VOICE_ID francophone (ex : "Chloé")
+          VOICE_ID="AZnzlk1XvdvUeBnXmlld" 
+          
+          curl -X POST https://api.elevenlabs.io/v1/text-to-speech/$VOICE_ID \
+            -H "xi-api-key: $ELEVENLABS_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"text\": \"$TEXT\",
+              \"model_id\": \"eleven_multilingual_v1\",
+              \"voice_settings\": {
+                \"stability\": 0.5,
+                \"similarity_boost\": 0.75
+              }
+            }" --output weather.mp3
+
+      - name: Télécharger l’audio
+        uses: actions/upload-artifact@v4
+        with:
+          name: voix-meteo
+          path: weather.mp3
