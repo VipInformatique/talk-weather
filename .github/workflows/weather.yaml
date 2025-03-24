@@ -35,7 +35,7 @@ jobs:
           TEXT=$(cat weather.txt)
           echo "Text to read: $TEXT"
 
-          curl -X POST https://api.elevenlabs.io/v1/text-to-speech/<DoKWx48xhz02MH95SQvv> \
+          curl -X POST https://api.elevenlabs.io/v1/text-to-speech/DoKWx48xhz02MH95SQvv \
             -H "xi-api-key: $ELEVENLABS_API_KEY" \
             -H "Content-Type: application/json" \
             -d "{
