@@ -1,18 +1,17 @@
-# Nom du workflow
 name: Talk Weather
 
-# Déclenchement du workflow
 on:
   push:
     branches:
       - main
   workflow_dispatch:
   schedule:
-    - cron: "*/2 * * * *"  # Chaque 2 minutes
+    - cron: "*/2 * * * *"  # Każde 2 minuty
 
 jobs:
-  ask-weatherr:
+  ask-weather:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -20,49 +19,36 @@ jobs:
       - name: Afficher l’heure d’exécution
         run: date
 
-      - name: Get temperature only
+      - name: Get weather data
+        id: get_weather
         run: |
-          TEMP=$(curl -s https://wttr.in/Paris)
-          echo "Température brute:"
-          echo "$TEMP"
+          TEMP=$(curl -s https://wttr.in/Paris?format=3)
+          echo "Weather: $TEMP"
+          echo "TEMP=$TEMP" >> $GITHUB_ENV
 
-
-        
-       
-             #   curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${{ secrets.GEMINI_API }}" \
-  #    -H 'Content-Type: application/json' \
-  #    -X POST \
- #     -d '{
-  #      "contents": [{
-  #        "parts":[{"text": Quel temps fait-il à Paris en ce moment ?"$TEMP"}]
-   #       }]
-   #     }'
-
-
-      - name: Convertir en parole avec ElevenLabs
+      - name: Ask Gemini and save to TEXT.txt
         env:
-          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-          TEXT: ${{ env.TEXT }}
+          GEMINI_API: ${{ secrets.GEMINI_API }}
+          TEMP: ${{ env.TEMP }}
         run: |
-          echo "Texte à lire : $TEXT"
-
-          # VOICE_ID francophone (ex : "Chloé")
-          VOICE_ID="AZnzlk1XvdvUeBnXmlld" 
-          
-          curl -X POST https://api.elevenlabs.io/v1/text-to-speech/$VOICE_ID \
-            -H "xi-api-key: $ELEVENLABS_API_KEY" \
-            -H "Content-Type: application/json" \
+          echo "Sending to Gemini: Quel temps fait-il à Paris en ce moment ? $TEMP"
+          RESPONSE=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=$GEMINI_API" \
+            -H 'Content-Type: application/json' \
+            -X POST \
             -d "{
-              \"text\": \"$TEXT\",
-              \"model_id\": \"eleven_multilingual_v1\",
-              \"voice_settings\": {
-                \"stability\": 0.5,
-                \"similarity_boost\": 0.75
-              }
-            }" --output weather.mp3
+              \"contents\": [{
+                \"parts\": [{
+                  \"text\": \"Quel temps fait-il à Paris en ce moment ? $TEMP\"
+                }]
+              }]
+            }")
 
-      - name: Télécharger l’audio
-        uses: actions/upload-artifact@v4
-        with:
-          name: voix-meteo
-          path: weather.mp3
+          # Extraire le texte de la réponse (simplifié, sans jq)
+          echo "$RESPONSE" > raw_response.json
+          MESSAGE=$(echo "$RESPONSE" | grep -oP '"text":\s*"\K(.*?)(?=")' | head -1)
+
+          echo "$MESSAGE" > TEXT.txt
+          echo "Réponse enregistrée dans TEXT.txt"
+          
+      - name: Afficher TEXT.txt
+        run: cat TEXT.txt
