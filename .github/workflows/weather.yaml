@@ -26,11 +26,16 @@ jobs:
       - name: Format French weather text
         run: |
           RAW=$(cat weather.txt)  # np. "+18°C ↑10 km/h"
+          
           TEMP=$(echo "$RAW" | grep -o "+[0-9]\+°C" | sed 's/+//; s/°C//')
           WIND=$(echo "$RAW" | grep -o "↑[0-9]\+ km/h" | sed 's/↑//; s/ km\/h//')
 
+          echo "Temp: $TEMP"
+          echo "Vent: $WIND"
+
           TEXT="Maintenant à Paris, il fait ${TEMP} degrés Celsius avec du vent de ${WIND} kilomètres par heure."
           echo "$TEXT"
+          
           echo "TEXT=$TEXT" >> $GITHUB_ENV
 
       - name: Convertir en parole avec ElevenLabs
