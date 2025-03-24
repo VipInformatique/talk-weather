@@ -23,6 +23,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Get Weather
-        run: 
-          curl wttr.in/Paris
+        run: |
+          curl -s wttr.in/Paris?format="%C+%t+%w" > weather.txt
+          echo "Weather text:"
+          cat weather.txt
 
+      - name: Convert to Speech using ElevenLabs
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: |
+          TEXT=$(cat weather.txt)
+          echo "Text to read: $TEXT"
+
+          curl -X POST https://api.elevenlabs.io/v1/text-to-speech/<DoKWx48xhz02MH95SQvv> \
+            -H "xi-api-key: $ELEVENLABS_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"text\": \"$TEXT\",
+              \"model_id\": \"eleven_monolingual_v1\",
+              \"voice_settings\": {
+                \"stability\": 0.5,
+                \"similarity_boost\": 0.75
+              }
+            }" --output weather.mp3
+
+      - name: Upload audio
+        uses: actions/upload-artifact@v4
+        with:
+          name: weather-voice
+          path: weather.mp3
