@@ -23,7 +23,7 @@ jobs:
         id: get_weather
         run: |
           TEMP=$(curl -s https://wttr.in/Paris)
-          reponse=$(curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${{ secrets.GEMINI_API }}" \
+          curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${{ secrets.GEMINI_API }}" \
           -H 'Content-Type: application/json' \
           -X POST \
           -d '{
@@ -31,6 +31,4 @@ jobs:
           "parts":[{"text": "Jaki dzis dzien?"}]
           }]
           }')
-
-          echo "$reponse"
           echo "$text"
