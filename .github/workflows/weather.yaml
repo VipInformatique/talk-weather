@@ -1,45 +1,58 @@
 # Nom du workflow
 name: Talk Weather
 
-#Déclenchement du workflow
+# Déclenchement du workflow
 on:
   push:
     branches:
-      - main 
-  # cliquer sur le bouton
+      - main
   workflow_dispatch:
-
   schedule:
-    # Chaques 2 minutes
-    - cron: "*/2 * * * *"
+    - cron: "*/2 * * * *"  # Chaque 2 minutes
 
-jobs: 
-  # Nom du job
+jobs:
   ask-weatherr:
-    # Nom de l'agent
     runs-on: ubuntu-latest
-    # Les étapes du job
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Get Weather
         run: |
           curl -s wttr.in/Paris?format="%C+%t+%w" > weather.txt
-          echo "Weather text:"
+          echo "Raw weather:"
           cat weather.txt
+
+      - name: Format Weather Text
+        id: format
+        run: |
+          RAW=$(cat weather.txt)
+          # Exemple: "Partly cloudy +60°F ↑2mph"
+          CONDITION=$(echo "$RAW" | awk '{print $1" "$2}')
+          TEMP=$(echo "$RAW" | grep -o "+[0-9]*°F")
+          WIND=$(echo "$RAW" | grep -o "↑[0-9]*mph")
+
+          TEMP=$(echo "$TEMP" | sed 's/+//; s/°F/ degrees Fahrenheit/')
+          WIND=$(echo "$WIND" | sed 's/↑//; s/mph/ miles per hour/')
+
+          TEXT="The weather in Paris is $CONDITION. Temperature is $TEMP. Wind speed is $WIND."
+
+          echo "Formatted text:"
+          echo "$TEXT"
+
+          echo "TEXT=$TEXT" >> $GITHUB_ENV
 
       - name: Convert to Speech using ElevenLabs
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
         run: |
-          TEXT=$(cat weather.txt)
           echo "Text to read: $TEXT"
 
           curl -X POST https://api.elevenlabs.io/v1/text-to-speech/DoKWx48xhz02MH95SQvv \
             -H "xi-api-key: $ELEVENLABS_API_KEY" \
             -H "Content-Type: application/json" \
             -d "{
-              \"text\": \"$TEXT\",
+              \"text\": \"${TEXT}\",
               \"model_id\": \"eleven_monolingual_v1\",
               \"voice_settings\": {
                 \"stability\": 0.5,
