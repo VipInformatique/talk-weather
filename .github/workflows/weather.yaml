@@ -22,21 +22,21 @@ jobs:
 
       - name: Get temperature only
         run: |
-          TEMP=curl -s "https://wttr.in/Paris?format=%t&m"
+          TEMP=$(curl -s https://wttr.in/Paris)
           echo "Température brute:"
           cat temp.txt
 
 
         
-        
-          curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${{ secrets.GEMINI_API }}" \
--H 'Content-Type: application/json' \
--X POST \
--d '{
-  "contents": [{
-    "parts":[{"text": Quel temps fait-il à Paris en ce moment ?"$TEMP"}]
-    }]
-   }'
+       
+             #   curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${{ secrets.GEMINI_API }}" \
+  #    -H 'Content-Type: application/json' \
+  #    -X POST \
+ #     -d '{
+  #      "contents": [{
+  #        "parts":[{"text": Quel temps fait-il à Paris en ce moment ?"$TEMP"}]
+   #       }]
+   #     }'
 
 
       - name: Convertir en parole avec ElevenLabs
