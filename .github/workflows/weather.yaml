@@ -19,7 +19,7 @@ jobs:
 
       - name: Get temperature only
         run: |
-          curl -s "https://wttr.in/Paris?format=%t&u" > temp.txt
+          curl -s "https://wttr.in/Paris?format=%t&m" > temp.txt
           echo "Température brute:"
           cat temp.txt
 
