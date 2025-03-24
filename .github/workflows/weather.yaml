@@ -17,51 +17,43 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Get Weather
+      - name: Get Weather in French and Celsius
         run: |
-          curl -s wttr.in/Paris?format="%C+%t+%w" > weather.txt
+          curl -s "wttr.in/Paris?format=%C+%t+%w&lang=fr&u" > weather.txt
           echo "Raw weather:"
           cat weather.txt
 
-      - name: Format Weather Text
-        id: format
+      - name: Enregistrer le texte météo
+        id: settext
         run: |
-          RAW=$(cat weather.txt)
-          # Exemple: "Partly cloudy +60°F ↑2mph"
-          CONDITION=$(echo "$RAW" | awk '{print $1" "$2}')
-          TEMP=$(echo "$RAW" | grep -o "+[0-9]*°F")
-          WIND=$(echo "$RAW" | grep -o "↑[0-9]*mph")
-
-          TEMP=$(echo "$TEMP" | sed 's/+//; s/°F/ degrees Fahrenheit/')
-          WIND=$(echo "$WIND" | sed 's/↑//; s/mph/ miles per hour/')
-
-          TEXT="The weather in Paris is $CONDITION. Temperature is $TEMP. Wind speed is $WIND."
-
-          echo "Formatted text:"
-          echo "$TEXT"
-
+          TEXT=$(cat weather.txt)
+          echo "Texte météo brut : $TEXT"
           echo "TEXT=$TEXT" >> $GITHUB_ENV
 
-      - name: Convert to Speech using ElevenLabs
+      - name: Convertir en parole avec ElevenLabs
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          TEXT: ${{ env.TEXT }}
         run: |
-          echo "Text to read: $TEXT"
+          echo "Texte à lire : $TEXT"
 
-          curl -X POST https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM \
+          # VOICE_ID francophone (ex : "Chloé")
+          VOICE_ID="AZnzlk1XvdvUeBnXmlld"  # ← zamień na inny jeśli chcesz
+          
+          curl -X POST https://api.elevenlabs.io/v1/text-to-speech/$VOICE_ID \
             -H "xi-api-key: $ELEVENLABS_API_KEY" \
             -H "Content-Type: application/json" \
             -d "{
-              \"text\": \"${TEXT}\",
-              \"model_id\": \"eleven_monolingual_v1\",
+              \"text\": \"$TEXT\",
+              \"model_id\": \"eleven_multilingual_v1\",
               \"voice_settings\": {
                 \"stability\": 0.5,
                 \"similarity_boost\": 0.75
               }
             }" --output weather.mp3
 
-      - name: Upload audio
+      - name: Télécharger l’audio
         uses: actions/upload-artifact@v4
         with:
-          name: weather-voice
+          name: voix-meteo
           path: weather.mp3
