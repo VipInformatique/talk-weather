@@ -3,6 +3,12 @@ name: Talk Weather
 
 #Déclenchement du workflow
 on:
+  push:
+    branches:
+      - main 
+  # cliquer sur le bouton
+  workflow_dispatch:
+
   schedule:
     # Chaques 2 minutes
     - cron: "*/2 * * * *"
