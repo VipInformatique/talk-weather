@@ -22,33 +22,16 @@ jobs:
       - name: Get weather data
         id: get_weather
         run: |
-          TEMP=$(curl -s https://wttr.in/Paris?format=3)
-          echo "Weather: $TEMP"
-          echo "TEMP=$TEMP" >> $GITHUB_ENV
+          TEMP=$(curl -s https://wttr.in/Paris)
+          prompt="Resume la meteo a Paris a partir de la reponse suivante : $TEMP"
 
-      - name: Ask Gemini and save to TEXT.txt
-        env:
-          GEMINI_API: ${{ secrets.GEMINI_API }}
-          TEMP: ${{ env.TEMP }}
-        run: |
-          echo "Sending to Gemini: Quel temps fait-il à Paris en ce moment ? $TEMP"
-          RESPONSE=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=$GEMINI_API" \
-            -H 'Content-Type: application/json' \
-            -X POST \
-            -d "{
-              \"contents\": [{
-                \"parts\": [{
-                  \"text\": \"Lubisz tanczyc? $TEMP\"
-                }]
-              }]
-            }")
+          RESPONSE=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${{ GEMINI_API}}" \
+          -H 'Content-Type: application/json' \
+          -X POST \
+          -d '{
+          "contents": [{
+            "parts":[{"text": "$prompt"}]
+            }]
+          }'
 
-          # Extraire le texte de la réponse (simplifié, sans jq)
-          echo "$RESPONSE" > raw_response.json
-          MESSAGE=$(echo "$RESPONSE" | grep -oP '"text":\s*"\K(.*?)(?=")' | head -1)
-
-          echo "$MESSAGE" > TEXT.txt
-          echo "Réponse enregistrée dans TEXT.txt"
-          
-      - name: Afficher TEXT.txt
-        run: cat TEXT.txt
+          echo "$REPONSE"
