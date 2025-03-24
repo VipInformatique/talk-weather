@@ -31,14 +31,14 @@ jobs:
           GEMINI_API: ${{ secrets.GEMINI_API }}
           TEMP: ${{ env.TEMP }}
         run: |
-          echo "Sending to Gemini: Quel temps fait-il à Paris en ce moment ? $TEMP"
+          echo "Sending to Gemini: Quel temps fait-il à Paris en ce moment ? $TEMP, Wypisz mi Calym zdaniem pogode na najblizsze 3 dni"
           RESPONSE=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=$GEMINI_API" \
             -H 'Content-Type: application/json' \
             -X POST \
             -d "{
               \"contents\": [{
                 \"parts\": [{
-                  \"text\": \"Quel temps fait-il à Paris en ce moment ? $TEMP\"
+                  \"text\": \"Quel temps fait-il à Paris en ce moment ? $TEMP \"
                 }]
               }]
             }")
