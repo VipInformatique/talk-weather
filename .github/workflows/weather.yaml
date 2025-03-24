@@ -28,8 +28,9 @@ jobs:
           -X POST \
           -d '{
           "contents": [{
-          "parts":[{"text": "Explain how AI works"}]
+          "parts":[{"text": "Jaki dzis dzien?"}]
           }]
           }')
 
           echo "$reponse"
+          echo "$text"
