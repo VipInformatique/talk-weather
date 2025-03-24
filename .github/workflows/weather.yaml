@@ -27,6 +27,7 @@ jobs:
           GEMINI_API: ${{ secrets.GEMINI_API }}
         run: |
           TEMP=$(curl -s https://wttr.in/Paris?format=3)
+          PROMPT="Résume la météo à Paris à partir de la réponse suivante : $TEMP"
 
           PAYLOAD=$(jq -n --arg text "$PROMPT" '{
             contents: [{
@@ -37,11 +38,10 @@ jobs:
           RESPONSE=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$GEMINI_API" \
             -H "Content-Type: application/json" \
             -X POST \
-            -d "Résume la météo à Paris à partir de la réponse suivante : $TEMP")
+            -d "$PAYLOAD")
 
           
           SUMMARY=$(echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text')
-
           echo "$SUMMARY"
 
           echo "$SUMMARY" > TEXT.txt
