@@ -47,7 +47,7 @@ jobs:
 
           echo "$SUMMARY" > TEXT.txt
 
-          - name: Convertir en parole avec ElevenLabs
+        - name: Convertir en parole avec ElevenLabs
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           TEXT: ${{ env.SUMMARY }}
