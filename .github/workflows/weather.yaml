@@ -17,6 +17,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Afficher l’heure d’exécution
+        run: date
+
       - name: Get temperature only
         run: |
           curl -s "https://wttr.in/Paris?format=%t&m" > temp.txt
