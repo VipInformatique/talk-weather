@@ -17,17 +17,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Get Weather in French and Celsius
+      - name: Get Weather in Celsius (raw data)
         run: |
-          curl -s "wttr.in/Paris?format=%C+%t+%w&lang=fr&u" > weather.txt
-          echo "Raw weather:"
+          curl -s "wttr.in/Paris?format=%t+%w&u" > weather.txt
+          echo "Raw data:"
           cat weather.txt
 
-      - name: Enregistrer le texte météo
-        id: settext
+      - name: Format French weather text
         run: |
-          TEXT=$(cat weather.txt)
-          echo "Texte météo brut : $TEXT"
+          RAW=$(cat weather.txt)  # np. "+18°C ↑10 km/h"
+          TEMP=$(echo "$RAW" | grep -o "+[0-9]\+°C" | sed 's/+//; s/°C//')
+          WIND=$(echo "$RAW" | grep -o "↑[0-9]\+ km/h" | sed 's/↑//; s/ km\/h//')
+
+          TEXT="Maintenant à Paris, il fait ${TEMP} degrés Celsius avec du vent de ${WIND} kilomètres par heure."
+          echo "$TEXT"
           echo "TEXT=$TEXT" >> $GITHUB_ENV
 
       - name: Convertir en parole avec ElevenLabs
