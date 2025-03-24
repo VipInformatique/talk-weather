@@ -28,7 +28,7 @@ jobs:
         run: |
           set -e
 
-          TEMP=$(curl -s https://wttr.in/Paris?format=3)
+          TEMP=$(curl -s "https://wttr.in/Paris?format=%C+%t&m")
           PROMPT="Résume la météo à Paris à partir de la réponse suivante : $TEMP, remplace tous les nombres par des mots, je ne veux ni chiffres ni nombres, je veux des lettres"
 
           PAYLOAD=$(jq -n --arg text "$PROMPT" '{
