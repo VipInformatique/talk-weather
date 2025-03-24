@@ -1,20 +1,53 @@
-- name: Get weather data and generate response
-  id: ask_gemini
-  run: |
-    TEMP=$(curl -s https://wttr.in/Paris)
-    PROMPT="Résume la météo à Paris à partir de la réponse suivante : $TEMP"
+name: Talk Weather
 
-    RESPONSE=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${{ secrets.GEMINI_API }}" \
-      -H 'Content-Type: application/json' \
-      -X POST \
-      -d "$(jq -n --arg text "$PROMPT" '{contents: [{parts: [{text: $text}]}]}')"
-    )
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: "*/2 * * * *"  # Każde 2 minuty
 
-    echo "RAW RESPONSE:"
-    echo "$RESPONSE"
+jobs:
+  ask-weather:
+    runs-on: ubuntu-latest
 
-    # Wyciągnięcie tekstu odpowiedzi z JSON
-    TEXT=$(echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    echo "Réponse générée par Gemini :"
-    echo "$TEXT"
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Afficher l’heure d’exécution
+        run: date
+
+      - name: Get weather data and ask Gemini
+        env:
+          GEMINI_API: ${{ secrets.GEMINI_API }}
+        run: |
+          # Pobierz pogodę (uproszczona wersja dla czytelności)
+          TEMP=$(curl -s https://wttr.in/Paris?format=3)
+          echo "Pobrana pogoda: $TEMP"
+
+          # Przygotuj prompt
+          PROMPT="Résume la météo à Paris à partir de la réponse suivante : $TEMP"
+
+          # Stwórz JSON payload
+          PAYLOAD=$(jq -n --arg text "$PROMPT" '{
+            contents: [{
+              parts: [{ text: $text }]
+            }]
+          }')
+
+          # Wyślij zapytanie do Gemini
+          RESPONSE=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$GEMINI_API" \
+            -H "Content-Type: application/json" \
+            -X POST \
+            -d "$PAYLOAD")
+
+          # Zapisz całą odpowiedź do pliku
+          echo "$RESPONSE" > TEXT.txt
+          
+          echo "Zawartość TEXT.txt:"
+          cat TEXT.txt
