@@ -1,4 +1,4 @@
-name: Hello Action
+name: Hello Action 2
 on:
   push:
     branches:
