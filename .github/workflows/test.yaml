@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: VipInformatique/hello-action@1.0.2
+      - uses: VipInformatique/hello-action@1.0.3
         with:
           name: Martine
                     
