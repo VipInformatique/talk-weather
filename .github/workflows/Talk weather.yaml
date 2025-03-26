@@ -3,19 +3,25 @@ name: Talk Weather (Coqui TTS)
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 6,14 * * *"  # 8:00 i 16:00 in Paris
+    - cron: "0 6,14 * * *"  # 8:00 i 16:00 czasu paryskiego (UTC+2)
 
 jobs:
   coqui-weather:
     runs-on: ubuntu-latest
+    container:
+      image: python:3.10-slim
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install TTS and ffmpeg
+      - name: Install system dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y python3 python3-pip ffmpeg
+          apt-get update
+          apt-get install -y ffmpeg curl jq
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
           pip install TTS
 
       - name: Get weather summary (Gemini)
