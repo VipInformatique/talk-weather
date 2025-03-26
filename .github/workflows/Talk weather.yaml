@@ -22,8 +22,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install --upgrade pip
-          pip install --user TTS
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          pip install TTS
 
       - name: Get weather summary (Gemini)
         env:
@@ -48,7 +47,7 @@ jobs:
 
       - name: Generate voice with Coqui TTS
         run: |
-          ~/.local/bin/TTS --text "$(cat summary.txt)" \
+          TTS --text "$(cat summary.txt)" \
               --model_name "tts_models/fr/mai/tacotron2-DDC" \
               --out_path weather.wav
           ffmpeg -y -i weather.wav weather.mp3
