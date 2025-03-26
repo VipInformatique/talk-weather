@@ -43,7 +43,7 @@ jobs:
           SUMMARY=$(echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text')
 
           echo "Résumé : $SUMMARY"
-          echo "$SUMMARY" > TEXT.txt
+          echo "$SUMMARY"
 
           # Zapisz do zmiennej środowiskowej dla następnego kroku
           echo "SUMMARY=$SUMMARY" >> $GITHUB_ENV
