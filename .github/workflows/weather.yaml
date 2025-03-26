@@ -6,7 +6,7 @@ on:
       - main
   workflow_dispatch:
   schedule:
-    - cron: "0 6,14 * * *"  
+    - cron: "0 6,14 * * *"  # 8:00 i 16:00 czasu polskiego (CEST)
 
 jobs:
   ask-weather:
@@ -43,15 +43,17 @@ jobs:
           SUMMARY=$(echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text')
 
           echo "Résumé : $SUMMARY"
-          echo "$SUMMARY"
 
-          # Zapisz do zmiennej środowiskowej dla następnego kroku
-          echo "SUMMARY=$SUMMARY" >> $GITHUB_ENV
+          # Zapisz poprawnie do zmiennej środowiskowej (obsługa wieloliniowych wartości)
+          {
+            echo "SUMMARY<<EOF"
+            echo "$SUMMARY"
+            echo "EOF"
+          } >> "$GITHUB_ENV"
 
       - name: Convertir en parole avec ElevenLabs
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-          SUMMARY: ${{ env.SUMMARY }}
         run: |
           set -e
 
@@ -63,7 +65,7 @@ jobs:
             -H "xi-api-key: $ELEVENLABS_API_KEY" \
             -H "Content-Type: application/json" \
             -d "{
-              \"text\": \"$SUMMARY\",
+              \"text\": \"${SUMMARY}\",
               \"model_id\": \"eleven_multilingual_v1\",
               \"voice_settings\": {
                 \"stability\": 0.5,
