@@ -24,13 +24,19 @@ jobs:
           pip install --upgrade pip
           pip install TTS
 
+      - name: Confirm TTS is installed
+        run: |
+          echo "Checking TTS location:"
+          which TTS || find / -name TTS -type f
+          ls -l /usr/local/bin/TTS
+
       - name: Get weather summary (Gemini)
         env:
           GEMINI_API: ${{ secrets.GEMINI_API }}
         run: |
           TEMP=$(curl -s "https://wttr.in/Paris?format=%C+%t&m")
           echo "Texte météo brut: $TEMP"
-          
+
           echo "Résume la météo à Paris à partir de la réponse suivante : $TEMP, remplace tous les chiffres par des mots. Ta réponse doit être brève et inclure une recommandation adaptée au temps." > prompt.txt
 
           PAYLOAD=$(jq -n --arg text "$(cat prompt.txt)" '{
@@ -48,8 +54,8 @@ jobs:
       - name: Generate voice with Coqui TTS
         run: |
           /usr/local/bin/TTS --text "$(cat summary.txt)" \
-          --model_name "tts_models/fr/mai/tacotron2-DDC" \
-          --out_path weather.wav
+              --model_name "tts_models/fr/mai/tacotron2-DDC" \
+              --out_path weather.wav
           ffmpeg -y -i weather.wav weather.mp3
 
       - name: Upload MP3
