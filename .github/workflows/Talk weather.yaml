@@ -10,22 +10,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Install TTS and ffmpeg
         run: |
           sudo apt-get update
           sudo apt-get install -y python3 python3-pip ffmpeg
           pip install TTS
 
-      - name: Get weather summary from Gemini
+      - name: Get weather summary (Gemini)
         env:
           GEMINI_API: ${{ secrets.GEMINI_API }}
         run: |
-          set -e
           TEMP=$(curl -s "https://wttr.in/Paris?format=%C+%t&m")
-          PROMPT="Résume la météo à Paris à partir de la réponse suivante : $TEMP, remplace tous les nombres par des mots, je ne veux ni chiffres ni nombres, je veux des lettres. La réponse doit uniquement contenir des informations sur la météo, accompagnées d'une recommandation adaptée à ce type de temps."
+          PROMPT="Résume la météo à Paris à partir de la réponse suivante : $TEMP, remplace tous les chiffres par des mots. Ta réponse doit être brève et inclure une recommandation adaptée au temps."
 
           PAYLOAD=$(jq -n --arg text "$PROMPT" '{
             contents: [ { parts: [ { text: $text } ] } ]
@@ -33,31 +31,15 @@ jobs:
 
           RESPONSE=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$GEMINI_API" \
             -H "Content-Type: application/json" \
-            -X POST \
             -d "$PAYLOAD")
 
-          SUMMARY=$(echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text')
-          echo "Résumé météo : $SUMMARY"
+          echo "$(echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text')" > summary.txt
 
-          {
-            echo "SUMMARY<<EOF"
-            echo "$SUMMARY"
-            echo "EOF"
-          } >> "$GITHUB_ENV"
-
-      - name: Generate voice with Coqui TTS (MP3)
-        env:
-          SUMMARY: ${{ env.SUMMARY }}
+      - name: Generate voice with Coqui TTS
         run: |
-          set -e
-          echo "$SUMMARY" > summary.txt
-
-          # Generate WAV
-          TTS --text "$SUMMARY" \
+          TTS --text "$(cat summary.txt)" \
               --model_name "tts_models/fr/mai/tacotron2-DDC" \
               --out_path weather.wav
-
-          # Convert WAV to MP3
           ffmpeg -y -i weather.wav weather.mp3
 
       - name: Upload MP3
