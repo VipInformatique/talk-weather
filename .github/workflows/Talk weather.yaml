@@ -3,7 +3,7 @@ name: Talk Weather (Coqui TTS)
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 6,14 * * *"  # 8:00 i 16:00 czasu paryskiego
+    - cron: "0 6,14 * * *"  # 8:00 i 16:00 in Paris
 
 jobs:
   coqui-weather:
