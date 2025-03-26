@@ -1,2 +1,2 @@
-# talk-weather
-GitHUB Action + N8N +IA
+# Talk Weather
+GitHUB Action + ElevenLabs + Gemini IA
