@@ -1,4 +1,4 @@
-name: Talk Weather
+name: Talk Weather (in Paris)
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
   workflow_dispatch:
   schedule:
-    - cron: "0 6,14 * * *"  # 8:00 i 16:00 czasu polskiego (CEST)
+    - cron: "0 6,14 * * *"  # 8:00 i 16:00 in Paris (CEST)
 
 jobs:
   ask-weather:
@@ -42,7 +42,7 @@ jobs:
 
           SUMMARY=$(echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text')
 
-          echo "Résumé : $SUMMARY"
+          echo "Answer is : $SUMMARY"
 
           {
             echo "SUMMARY<<EOF"
