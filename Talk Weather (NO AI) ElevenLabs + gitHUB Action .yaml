@@ -11,7 +11,7 @@ on:
     - cron: "*/2 * * * *"  # Chaque 2 minutes
 
 jobs:
-  ask-weatherr:
+  ask-weather:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -20,16 +20,11 @@ jobs:
       - name: Afficher l’heure d’exécution
         run: date
 
-      - name: Get temperature only
+      - name: Obtenir la température
         run: |
           curl -s "https://wttr.in/Paris?format=%t&m" > temp.txt
-          echo "Température brute:"
-          cat temp.txt
-
-      - name: Préparer le texte
-        run: |
-          TEMP=$(cat temp.txt | grep -o "+[0-9]\+" | sed 's/+//')
-          TEXT="Maintenant à Paris, il fait ${TEMP}degrés. Bonne journée !"
+          TEMP=$(cat temp.txt | tr -d '+') # exemple : "10°C"
+          TEXT="Légère bruine et pluie, il fait $TEMP, prenez un parapluie."
           echo "$TEXT"
           echo "TEXT=$TEXT" >> $GITHUB_ENV
 
@@ -39,21 +34,23 @@ jobs:
           TEXT: ${{ env.TEXT }}
         run: |
           echo "Texte à lire : $TEXT"
+          VOICE_ID="AZnzlk1XvdvUeBnXmlld"  # Chloé
 
-          # VOICE_ID francophone (ex : "Chloé")
-          VOICE_ID="AZnzlk1XvdvUeBnXmlld" 
-          
-          curl -X POST https://api.elevenlabs.io/v1/text-to-speech/$VOICE_ID \
+          # Créer un JSON valide avec jq
+          echo '{}' | jq --arg txt "$TEXT" '{
+            text: $txt,
+            model_id: "eleven_multilingual_v1",
+            voice_settings: {
+              stability: 0.5,
+              similarity_boost: 0.75
+            }
+          }' > payload.json
+
+          # Envoyer la requête et récupérer l'audio
+          curl -s -X POST https://api.elevenlabs.io/v1/text-to-speech/$VOICE_ID \
             -H "xi-api-key: $ELEVENLABS_API_KEY" \
             -H "Content-Type: application/json" \
-            -d "{
-              \"text\": \"$TEXT\",
-              \"model_id\": \"eleven_multilingual_v1\",
-              \"voice_settings\": {
-                \"stability\": 0.5,
-                \"similarity_boost\": 0.75
-              }
-            }" --output weather.mp3
+            -d @payload.json --output weather.mp3
 
       - name: Télécharger l’audio
         uses: actions/upload-artifact@v4
