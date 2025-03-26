@@ -6,7 +6,7 @@ on:
       - main
   workflow_dispatch:
   schedule:
-    - cron: "0 6,14 * * *"  # 8:00 i 16:00 (CEST)
+    - cron: "0 6,14 * * *"  # 8:00 i 16:00 czasu polskiego (CEST)
 
 jobs:
   ask-weather:
@@ -72,3 +72,9 @@ jobs:
                 \"similarity_boost\": 0.75
               }
             }" --output weather.mp3
+
+      - name: Upload MP3 as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: weather-audio
+          path: weather.mp3
