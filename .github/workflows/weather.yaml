@@ -6,7 +6,7 @@ on:
       - main
   workflow_dispatch:
   schedule:
-    - cron: "0 6,14 * * *"  # 8:00 i 16:00 czasu polskiego (CEST)
+    - cron: "0 6,14 * * *"  # 8:00 i 16:00 (CEST)
 
 jobs:
   ask-weather:
@@ -29,7 +29,7 @@ jobs:
           set -e
 
           TEMP=$(curl -s "https://wttr.in/Paris?format=%C+%t&m")
-          PROMPT="Résume la météo à Paris à partir de la réponse suivante : $TEMP, remplace tous les nombres par des mots, je ne veux ni chiffres ni nombres, je veux des lettres, La réponse doit uniquement contenir des informations sur la météo, sans ton commentaire. La réponse doit uniquement contenir des informations sur la météo, accompagnées d'une recommandation adaptée à ce type de temps, comme "prenez un parapluie", "buvez beaucoup d'eau par forte chaleur", ou toute autre suggestion conforme aux bonnes pratiques selon les conditions météorologiques."
+          PROMPT="Résume la météo à Paris à partir de la réponse suivante : $TEMP, remplace tous les nombres par des mots, je ne veux ni chiffres ni nombres, je veux des lettres, La réponse doit uniquement contenir des informations sur la météo, sans ton commentaire. La réponse doit uniquement contenir des informations sur la météo, accompagnées d'une recommandation adaptée à ce type de temps, comme \"prenez un parapluie\", \"buvez beaucoup d'eau par forte chaleur\", ou toute autre suggestion conforme aux bonnes pratiques selon les conditions météorologiques."
 
           PAYLOAD=$(jq -n --arg text "$PROMPT" '{
             contents: [ { parts: [ { text: $text } ] } ]
@@ -53,12 +53,13 @@ jobs:
       - name: Convertir en parole avec ElevenLabs
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          SUMMARY: ${{ env.SUMMARY }}
         run: |
           set -e
 
           echo "Texte à lire : $SUMMARY"
 
-          VOICE_ID="ErXwobaYiN019PkySvjV"  # Chloé, francophone
+          VOICE_ID="ErXwobaYiN019PkySvjV"
 
           curl -X POST https://api.elevenlabs.io/v1/text-to-speech/$VOICE_ID \
             -H "xi-api-key: $ELEVENLABS_API_KEY" \
@@ -71,9 +72,3 @@ jobs:
                 \"similarity_boost\": 0.75
               }
             }" --output weather.mp3
-
-      - name: Télécharger l’audio
-        uses: actions/upload-artifact@v4
-        with:
-          name: voix-meteo
-          path: weather.mp3
