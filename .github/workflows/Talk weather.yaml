@@ -29,7 +29,7 @@ jobs:
           set -e
 
           TEMP=$(curl -s "https://wttr.in/Paris?format=%C+%t&m")
-          PROMPT="Résume la météo à Paris à partir de la réponse suivante : $TEMP, remplace tous les nombres par des mots, je ne veux ni chiffres ni nombres, je veux des lettres, La réponse doit uniquement contenir des informations sur la météo, sans ton commentaire. La réponse doit uniquement contenir des informations sur la météo, accompagnées d'une recommandation adaptée à ce type de temps, comme \"prenez un parapluie\", \"buvez beaucoup d'eau par forte chaleur\", ou toute autre suggestion conforme aux bonnes pratiques selon les conditions météorologiques."
+          PROMPT="Résume la météo à Paris à partir de la réponse suivante : $TEMP, remplace tous les nombres par des mots, je ne veux ni chiffres ni nombres, je veux des lettres. La réponse doit uniquement contenir des informations sur la météo, sans ton commentaire, accompagnées d'une recommandation adaptée à ce type de temps, comme « prenez un parapluie », « buvez beaucoup d'eau par forte chaleur », etc."
 
           PAYLOAD=$(jq -n --arg text "$PROMPT" '{
             contents: [ { parts: [ { text: $text } ] } ]
@@ -61,17 +61,31 @@ jobs:
 
           VOICE_ID="ErXwobaYiN019PkySvjV"
 
-          curl -X POST https://api.elevenlabs.io/v1/text-to-speech/$VOICE_ID \
+          # Créer un JSON sûr avec jq -Rs
+          echo "$SUMMARY" | jq -Rs '{
+            text: .,
+            model_id: "eleven_multilingual_v1",
+            voice_settings: {
+              stability: 0.5,
+              similarity_boost: 0.75
+            }
+          }' > payload.json
+
+          echo "Contenu de payload.json :"
+          cat payload.json
+
+          curl -s -X POST https://api.elevenlabs.io/v1/text-to-speech/$VOICE_ID \
             -H "xi-api-key: $ELEVENLABS_API_KEY" \
             -H "Content-Type: application/json" \
-            -d "{
-              \"text\": \"${SUMMARY}\",
-              \"model_id\": \"eleven_multilingual_v1\",
-              \"voice_settings\": {
-                \"stability\": 0.5,
-                \"similarity_boost\": 0.75
-              }
-            }" --output weather.mp3
+            -d @payload.json --output weather.mp3
+
+          echo "Contrôle du fichier audio :"
+          file weather.mp3
+
+          if [[ $(file weather.mp3) != *"Audio file"* ]]; then
+            echo "❌ Erreur : le fichier audio est vide ou invalide."
+            exit 1
+          fi
 
       - name: Upload MP3 as artifact
         uses: actions/upload-artifact@v4
