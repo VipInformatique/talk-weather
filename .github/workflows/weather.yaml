@@ -6,7 +6,7 @@ on:
       - main
   workflow_dispatch:
   schedule:
-    - cron: "*/2 * * * *"  # Każde 2 minuty
+    - cron: "0 6,14 * * *"  
 
 jobs:
   ask-weather:
@@ -76,15 +76,3 @@ jobs:
         with:
           name: voix-meteo
           path: weather.mp3
-
-      - name: Show APT packages
-        run: dpkg -l
-
-      - name: Show installed snap packages
-        run: snap list
-
-      - name: Show Python packages
-        run: pip list
-
-      - name: Show Node packages
-        run: npm list -g --depth=0
