@@ -1,2 +1,2 @@
 # Talk Weather
-GitHUB Action + ElevenLabs + Gemini IA
+GitHUB Action + ElevenLabs (or TTS) + Gemini IA
