@@ -1,0 +1,66 @@
+name: Talk Weather (Coqui TTS)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6,14 * * *"  # 8:00 i 16:00 czasu paryskiego (UTC+2)
+
+jobs:
+  coqui-weather:
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.10-slim
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          apt-get update
+          apt-get install -y ffmpeg curl jq
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install "TTS==0.22.0" "torch<2.6"
+
+      - name: Confirm TTS is installed
+        run: |
+          echo "Checking TTS location:"
+          which TTS || which tts || find / -name TTS -o -name tts -type f 2>/dev/null || echo "TTS not found"
+
+
+      - name: Get weather summary (Gemini)
+        env:
+          GEMINI_API: ${{ secrets.GEMINI_API }}
+        run: |
+          TEMP=$(curl -s "https://wttr.in/Paris?format=%C+%t&m")
+          echo "Texte météo brut: $TEMP"
+
+          echo "Résume la météo à Paris à partir de la réponse suivante : $TEMP, remplace tous les chiffres par des mots. Ta réponse doit être brève et inclure une recommandation adaptée au temps." > prompt.txt
+
+          PAYLOAD=$(jq -n --arg text "$(cat prompt.txt)" '{
+            contents: [ { parts: [ { text: $text } ] } ]
+          }')
+
+          curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$GEMINI_API" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD" \
+            | jq -r '.candidates[0].content.parts[0].text' > summary.txt
+
+          echo "Résumé généré:"
+          cat summary.txt
+
+      - name: Generate voice with Coqui TTS
+        run: |
+          tts --text "$(cat summary.txt)" \
+              --model_name "tts_models/fr/mai/tacotron2-DDC" \
+              --out_path weather.wav
+          ffmpeg -y -i weather.wav weather.mp3
+
+
+      - name: Upload MP3
+        uses: actions/upload-artifact@v4
+        with:
+          name: weather-audio
+          path: weather.mp3
