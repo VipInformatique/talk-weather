@@ -27,8 +27,8 @@ jobs:
       - name: Confirm TTS is installed
         run: |
           echo "Checking TTS location:"
-          which TTS || find / -name TTS -type f
-          ls -l /usr/local/bin/TTS
+          which TTS || which tts || find / -name TTS -o -name tts -type f 2>/dev/null || echo "TTS not found"
+
 
       - name: Get weather summary (Gemini)
         env:
