@@ -53,10 +53,11 @@ jobs:
 
       - name: Generate voice with Coqui TTS
         run: |
-          /usr/local/bin/TTS --text "$(cat summary.txt)" \
+          tts --text "$(cat summary.txt)" \
               --model_name "tts_models/fr/mai/tacotron2-DDC" \
               --out_path weather.wav
           ffmpeg -y -i weather.wav weather.mp3
+
 
       - name: Upload MP3
         uses: actions/upload-artifact@v4
