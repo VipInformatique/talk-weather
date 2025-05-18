@@ -29,7 +29,7 @@ jobs:
           set -e
 
           TEMP=$(curl -s "https://wttr.in/Paris?format=%C+%t&m")
-          PROMPT="Résume la météo à Paris à partir de la réponse suivante : $TEMP, remplace tous les nombres par des mots, je ne veux ni chiffres ni nombres, je veux des lettres, La réponse doit uniquement contenir des informations sur la météo, sans ton commentaire. La réponse doit uniquement contenir des informations sur la météo, accompagnées d'une recommandation adaptée à ce type de temps, comme \"prenez un parapluie\", \"buvez beaucoup d'eau par forte chaleur\", ou toute autre suggestion conforme aux bonnes pratiques selon les conditions météorologiques. Podaj odpowiedzw w trzech jezykach, Polski Angielski i Francuski."
+          PROMPT="Résume la météo à Paris à partir de la réponse suivante : $TEMP, remplace tous les nombres par des mots, je ne veux ni chiffres ni nombres, je veux des lettres, La réponse doit uniquement contenir des informations sur la météo, sans ton commentaire. La réponse doit uniquement contenir des informations sur la météo, accompagnées d'une recommandation adaptée à ce type de temps, comme \"prenez un parapluie\", \"buvez beaucoup d'eau par forte chaleur\", ou toute autre suggestion conforme aux bonnes pratiques selon les conditions météorologiques. Podaj odpowiedzw w dwoch jezykach, Polski i Francuski. Podaj odpowiezdzi w jednej lini  Angielski pierwszy i Polski po przecinku, nie pisz  w cudzyslowiach nazw jezykow, che tylko odpowiedz."
 
           PAYLOAD=$(jq -n --arg text "$PROMPT" '{
             contents: [ { parts: [ { text: $text } ] } ]
