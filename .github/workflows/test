@@ -1,0 +1,80 @@
+name: Talk Weather (in Paris)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6,14 * * *"  # 8:00 i 16:00 in Paris (CEST)
+
+jobs:
+  ask-weather:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Afficher l’heure d’exécution
+        run: date
+
+      - name: Get weather data and ask Gemini
+        env:
+          GEMINI_API: ${{ secrets.GEMINI_API }}
+        run: |
+          set -e
+
+          TEMP=$(curl -s "https://wttr.in/Paris?format=%C+%t&m")
+          PROMPT="Résume la météo à Paris à partir de la réponse suivante : $TEMP, remplace tous les nombres par des mots, je ne veux ni chiffres ni nombres, je veux des lettres, La réponse doit uniquement contenir des informations sur la météo, sans ton commentaire. La réponse doit uniquement contenir des informations sur la météo, accompagnées d'une recommandation adaptée à ce type de temps, comme \"prenez un parapluie\", \"buvez beaucoup d'eau par forte chaleur\", ou toute autre suggestion conforme aux bonnes pratiques selon les conditions météorologiques."
+
+          PAYLOAD=$(jq -n --arg text "$PROMPT" '{
+            contents: [ { parts: [ { text: $text } ] } ]
+          }')
+
+          RESPONSE=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$GEMINI_API" \
+            -H "Content-Type: application/json" \
+            -X POST \
+            -d "$PAYLOAD")
+
+          SUMMARY=$(echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text')
+
+          echo "Answer is : $SUMMARY"
+
+          {
+            echo "SUMMARY<<EOF"
+            echo "$SUMMARY"
+            echo "EOF"
+          } >> "$GITHUB_ENV"
+
+      - name: Convertir en parole avec ElevenLabs
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          SUMMARY: ${{ env.SUMMARY }}
+        run: |
+          set -e
+
+          echo "Texte à lire : $SUMMARY"
+
+          VOICE_ID="ErXwobaYiN019PkySvjV"
+
+          curl -X POST https://api.elevenlabs.io/v1/text-to-speech/$VOICE_ID \
+            -H "xi-api-key: $ELEVENLABS_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"text\": \"${SUMMARY}\",
+              \"model_id\": \"eleven_multilingual_v1\",
+              \"voice_settings\": {
+                \"stability\": 0.5,
+                \"similarity_boost\": 0.75
+              }
+            }" --output weather.mp3
+
+      - name: Upload MP3 as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: weather-audio
+          path: weather.mp3
